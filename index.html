@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuizMaster Pro - Advanced Learning Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        * { font-family: 'Inter', sans-serif; }
+        body { transition: background 0.3s ease; }
+        .gradient-bg { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
+        .light-mode { background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%) !important; }
+        .light-mode .glass { background: rgba(255,255,255,0.8) !important; color: #1e293b !important; }
+        .light-mode .text-white { color: #1e293b !important; }
+        .light-mode nav { border-bottom: 1px solid rgba(0,0,0,0.1) !important; }
+        .glass { backdrop-filter: blur(10px); background: rgba(255,255,255,0.1); }
+        .animate-pulse-slow { animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        .question-enter { animation: slideIn 0.5s ease-out; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .option-hover:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.2); }
+        .progress-bar { transition: width 0.3s ease; }
+        .streak-glow { box-shadow: 0 0 20px rgba(34, 197, 94, 0.5); }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen">
+    <!-- Navigation -->
+    <nav class="glass border-b border-white/20 p-4">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-white">🧠 QuizMaster Pro</h1>
+            <div class="flex gap-4">
+                <button id="darkMode" class="glass px-4 py-2 rounded-lg text-white hover:bg-white/20">🌙</button>
+                <button id="soundToggle" class="glass px-4 py-2 rounded-lg text-white hover:bg-white/20">🔊</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-4xl mx-auto p-6">
+        <!-- Dashboard -->
+        <div id="dashboard" class="space-y-6">
+            <div class="glass rounded-2xl p-8 text-white text-center">
+                <h2 class="text-4xl font-bold mb-4 text-blue-400">Welcome to QuizMaster Pro</h2>
+                <p class="text-xl mb-8 opacity-90">Advanced quiz platform with real-time analytics</p>
+                
+                <!-- Category Selection -->
+                <div class="grid md:grid-cols-3 gap-4 mb-8">
+                    <button class="category-btn glass p-6 rounded-xl hover:bg-white/20 transition-all" data-category="general">
+                        <div class="text-3xl mb-2">🌍</div>
+                        <h3 class="font-semibold">General Knowledge</h3>
+                        <p class="text-sm opacity-75">Mixed topics</p>
+                    </button>
+                    <button class="category-btn glass p-6 rounded-xl hover:bg-white/20 transition-all" data-category="science">
+                        <div class="text-3xl mb-2">🔬</div>
+                        <h3 class="font-semibold">Science & Tech</h3>
+                        <p class="text-sm opacity-75">STEM questions</p>
+                    </button>
+                    <button class="category-btn glass p-6 rounded-xl hover:bg-white/20 transition-all" data-category="coding">
+                        <div class="text-3xl mb-2">💻</div>
+                        <h3 class="font-semibold">Programming</h3>
+                        <p class="text-sm opacity-75">Code challenges</p>
+                    </button>
+                </div>
+
+                <!-- Difficulty & Settings -->
+                <div class="grid md:grid-cols-2 gap-6 mb-8">
+                    <div class="glass p-4 rounded-xl">
+                        <label class="block text-sm font-medium mb-2">Difficulty</label>
+                        <select id="difficulty" class="w-full bg-white/20 border border-white/30 rounded-lg p-2 text-white">
+                            <option value="easy">Easy (30s per question)</option>
+                            <option value="medium" selected>Medium (20s per question)</option>
+                            <option value="hard">Hard (15s per question)</option>
+                        </select>
+                    </div>
+                    <div class="glass p-4 rounded-xl">
+                        <label class="block text-sm font-medium mb-2">Questions</label>
+                        <select id="questionCount" class="w-full bg-white/20 border border-white/30 rounded-lg p-2 text-white">
+                            <option value="5">5 Questions</option>
+                            <option value="10" selected>10 Questions</option>
+                            <option value="15">15 Questions</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button id="startQuiz" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all transform hover:scale-105">
+                    🚀 Start Quiz Adventure
+                </button>
+            </div>
+
+            <!-- Statistics Dashboard -->
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="glass rounded-xl p-6 text-white text-center">
+                    <div class="text-3xl mb-2">🏆</div>
+                    <div class="text-2xl font-bold" id="totalScore">0</div>
+                    <div class="text-sm opacity-75">Total Score</div>
+                </div>
+                <div class="glass rounded-xl p-6 text-white text-center">
+                    <div class="text-3xl mb-2">🔥</div>
+                    <div class="text-2xl font-bold" id="streak">0</div>
+                    <div class="text-sm opacity-75">Best Streak</div>
+                </div>
+                <div class="glass rounded-xl p-6 text-white text-center">
+                    <div class="text-3xl mb-2">📊</div>
+                    <div class="text-2xl font-bold" id="accuracy">0%</div>
+                    <div class="text-sm opacity-75">Accuracy</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quiz Interface -->
+        <div id="quizInterface" class="hidden">
+            <!-- Progress & Stats Bar -->
+            <div class="glass rounded-xl p-4 mb-6 text-white">
+                <div class="flex justify-between items-center mb-4">
+                    <div class="flex items-center gap-4">
+                        <span class="text-lg font-semibold">Q<span id="currentQ">1</span>/<span id="totalQ">10</span></span>
+                        <div id="streakDisplay" class="hidden bg-green-500 px-3 py-1 rounded-full text-sm font-bold">
+                            🔥 <span id="currentStreak">0</span> streak
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="text-lg font-bold">Score: <span id="liveScore">0</span></div>
+                        <div id="timer" class="text-2xl font-bold bg-red-500 px-4 py-2 rounded-lg">20</div>
+                    </div>
+                </div>
+                <div class="w-full bg-white/20 rounded-full h-2">
+                    <div id="progressBar" class="progress-bar bg-green-500 h-2 rounded-full" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Question Card -->
+            <div class="glass rounded-2xl p-8 mb-6 text-white question-enter">
+                <div class="flex items-start gap-4 mb-6">
+                    <div id="questionIcon" class="text-4xl">❓</div>
+                    <div class="flex-1">
+                        <div id="questionCategory" class="text-sm opacity-75 mb-2"></div>
+                        <h3 id="questionText" class="text-2xl font-semibold leading-relaxed"></h3>
+                        <div id="questionHint" class="text-sm opacity-75 mt-2 hidden"></div>
+                    </div>
+                </div>
+                
+                <!-- Options -->
+                <div id="optionsContainer" class="space-y-3"></div>
+                
+                <!-- Feedback -->
+                <div id="feedback" class="mt-6 p-4 rounded-xl hidden">
+                    <div id="feedbackText" class="font-semibold"></div>
+                    <div id="explanation" class="text-sm mt-2 opacity-90"></div>
+                </div>
+            </div>
+
+            <!-- Power-ups -->
+            <div class="glass rounded-xl p-4 text-white">
+                <h4 class="font-semibold mb-3">Power-ups</h4>
+                <div class="flex gap-3">
+                    <button id="fiftyFifty" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50">
+                        ✂️ 50/50 (<span id="fiftyCount">2</span>)
+                    </button>
+                    <button id="skipQuestion" class="bg-teal-600 hover:bg-teal-700 px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50">
+                        ⏭️ Skip (<span id="skipCount">1</span>)
+                    </button>
+                    <button id="extraTime" class="bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50">
+                        ⏰ +10s (<span id="timeCount">1</span>)
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div id="results" class="hidden glass rounded-2xl p-8 text-white text-center">
+            <div class="mb-6">
+                <div id="resultIcon" class="text-6xl mb-4">🎉</div>
+                <h2 class="text-3xl font-bold mb-2 text-blue-400">Quiz Complete!</h2>
+                <div class="text-5xl font-bold mb-4" id="finalScore">8/10</div>
+                <div id="resultMessage" class="text-xl mb-6"></div>
+            </div>
+
+            <!-- Detailed Analytics -->
+            <div class="grid md:grid-cols-2 gap-6 mb-8">
+                <div class="bg-white/10 rounded-xl p-6">
+                    <h3 class="font-semibold mb-4">Performance Breakdown</h3>
+                    <canvas id="performanceChart" width="300" height="200"></canvas>
+                </div>
+                <div class="bg-white/10 rounded-xl p-6">
+                    <h3 class="font-semibold mb-4">Category Analysis</h3>
+                    <div id="categoryBreakdown" class="space-y-3"></div>
+                </div>
+            </div>
+
+            <!-- Achievements -->
+            <div id="achievements" class="mb-6"></div>
+
+            <div class="flex gap-4 justify-center">
+                <button id="playAgain" class="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-xl font-semibold transition-all">
+                    🔄 Play Again
+                </button>
+                <button id="shareResults" class="bg-teal-600 hover:bg-teal-700 px-6 py-3 rounded-xl font-semibold transition-all">
+                    📤 Share Results
+                </button>
+                <button id="viewStats" class="bg-cyan-600 hover:bg-cyan-700 px-6 py-3 rounded-xl font-semibold transition-all">
+                    📊 View Stats
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audio Elements -->
+    <audio id="correctSound" preload="auto">
+        <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT" type="audio/wav">
+    </audio>
+    <audio id="wrongSound" preload="auto">
+        <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm1" type="audio/wav">
+    </audio>
+
+    <script>
+        class QuizMasterPro {
+            constructor() {
+                this.questions = [];
+                this.currentQuestion = 0;
+                this.score = 0;
+                this.streak = 0;
+                this.maxStreak = 0;
+                this.timer = 20;
+                this.timerInterval = null;
+                this.selectedCategory = 'general';
+                this.difficulty = 'medium';
+                this.questionCount = 10;
+                this.powerUps = { fiftyFifty: 2, skip: 1, extraTime: 1 };
+                this.stats = JSON.parse(localStorage.getItem('quizStats')) || { totalScore: 0, gamesPlayed: 0, correctAnswers: 0, totalQuestions: 0 };
+                this.soundEnabled = true;
+                this.darkMode = false;
+                this.answers = [];
+                this.startTime = null;
+                
+                this.initializeQuestions();
+                this.bindEvents();
+                this.updateDashboard();
+            }
+
+            initializeQuestions() {
+                this.questionBank = {
+                    general: [
+                        { q: "What is the capital of India?", a: "New Delhi", o: ["Mumbai", "New Delhi", "Kolkata", "Chennai"], e: "New Delhi has been India's capital since 1911.", c: "🇮🇳" },
+                        { q: "Which planet is known as the Red Planet?", a: "Mars", o: ["Venus", "Mars", "Jupiter", "Saturn"], e: "Mars appears red due to iron oxide on its surface.", c: "🪐" },
+                        { q: "Who wrote 'Romeo and Juliet'?", a: "William Shakespeare", o: ["Charles Dickens", "William Shakespeare", "Jane Austen", "Mark Twain"], e: "Shakespeare wrote this tragedy around 1595.", c: "📚" },
+                        { q: "What is the largest ocean on Earth?", a: "Pacific Ocean", o: ["Atlantic Ocean", "Pacific Ocean", "Indian Ocean", "Arctic Ocean"], e: "The Pacific covers about 46% of Earth's water surface.", c: "🌊" },
+                        { q: "In which year did World War II end?", a: "1945", o: ["1944", "1945", "1946", "1947"], e: "WWII ended on September 2, 1945 with Japan's surrender.", c: "⚔️" }
+                    ],
+                    science: [
+                        { q: "What is the chemical symbol for gold?", a: "Au", o: ["Go", "Au", "Ag", "Al"], e: "Au comes from the Latin word 'aurum' meaning gold.", c: "🧪" },
+                        { q: "How many bones are in an adult human body?", a: "206", o: ["204", "206", "208", "210"], e: "Babies are born with 270 bones, many of which fuse as they grow.", c: "🦴" },
+                        { q: "What gas do plants absorb from the atmosphere?", a: "Carbon dioxide", o: ["Oxygen", "Carbon dioxide", "Nitrogen", "Hydrogen"], e: "Plants use CO2 in photosynthesis to make glucose.", c: "🌱" },
+                        { q: "What is the speed of light in vacuum?", a: "299,792,458 m/s", o: ["299,792,458 m/s", "300,000,000 m/s", "299,000,000 m/s", "298,792,458 m/s"], e: "This is one of the fundamental constants of physics.", c: "💡" },
+                        { q: "Which blood type is known as the universal donor?", a: "O negative", o: ["A positive", "O negative", "AB positive", "B negative"], e: "O- blood can be given to people with any blood type.", c: "🩸" }
+                    ],
+                    coding: [
+                        { q: "What does HTML stand for?", a: "HyperText Markup Language", o: ["HyperTool Markup Language", "HyperText Markup Language", "High-Level Text Management", "Home Tool Markup Language"], e: "HTML is the standard markup language for web pages.", c: "💻" },
+                        { q: "Which of these is NOT a programming language?", a: "HTTP", o: ["Python", "HTTP", "JavaScript", "Java"], e: "HTTP is a protocol, not a programming language.", c: "🌐" },
+                        { q: "What is the time complexity of binary search?", a: "O(log n)", o: ["O(n)", "O(log n)", "O(n²)", "O(1)"], e: "Binary search halves the search space with each comparison.", c: "🔍" },
+                        { q: "In Python, which keyword is used to define a function?", a: "def", o: ["function", "def", "func", "define"], e: "The 'def' keyword is used to define functions in Python.", c: "🐍" },
+                        { q: "What does CSS stand for?", a: "Cascading Style Sheets", o: ["Computer Style Sheets", "Cascading Style Sheets", "Creative Style Sheets", "Colorful Style Sheets"], e: "CSS is used to style and layout web pages.", c: "🎨" }
+                    ]
+                };
+            }
+
+            bindEvents() {
+                document.querySelectorAll('.category-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('ring-2', 'ring-white'));
+                        btn.classList.add('ring-2', 'ring-white');
+                        this.selectedCategory = btn.dataset.category;
+                    });
+                });
+
+                document.getElementById('startQuiz').addEventListener('click', () => this.startQuiz());
+                document.getElementById('playAgain').addEventListener('click', () => this.resetQuiz());
+                document.getElementById('shareResults').addEventListener('click', () => this.shareResults());
+                document.getElementById('soundToggle').addEventListener('click', () => this.toggleSound());
+                document.getElementById('darkMode').addEventListener('click', () => this.toggleDarkMode());
+                
+                // Power-ups
+                document.getElementById('fiftyFifty').addEventListener('click', () => this.useFiftyFifty());
+                document.getElementById('skipQuestion').addEventListener('click', () => this.skipQuestion());
+                document.getElementById('extraTime').addEventListener('click', () => this.addExtraTime());
+            }
+
+            startQuiz() {
+                this.difficulty = document.getElementById('difficulty').value;
+                this.questionCount = parseInt(document.getElementById('questionCount').value);
+                this.timer = this.difficulty === 'easy' ? 30 : this.difficulty === 'medium' ? 20 : 15;
+                
+                this.questions = this.shuffleArray([...this.questionBank[this.selectedCategory]]).slice(0, this.questionCount);
+                this.currentQuestion = 0;
+                this.score = 0;
+                this.streak = 0;
+                this.answers = [];
+                this.startTime = Date.now();
+                this.powerUps = { fiftyFifty: 2, skip: 1, extraTime: 1 };
+                
+                document.getElementById('dashboard').classList.add('hidden');
+                document.getElementById('quizInterface').classList.remove('hidden');
+                document.getElementById('totalQ').textContent = this.questions.length;
+                
+                this.updatePowerUps();
+                this.displayQuestion();
+            }
+
+            displayQuestion() {
+                if (this.currentQuestion >= this.questions.length) {
+                    return this.endQuiz();
+                }
+
+                const question = this.questions[this.currentQuestion];
+                const container = document.querySelector('.question-enter');
+                container.classList.remove('question-enter');
+                
+                setTimeout(() => {
+                    container.classList.add('question-enter');
+                    document.getElementById('currentQ').textContent = this.currentQuestion + 1;
+                    document.getElementById('questionIcon').textContent = question.c;
+                    document.getElementById('questionCategory').textContent = this.selectedCategory.toUpperCase();
+                    document.getElementById('questionText').textContent = question.q;
+                    
+                    const optionsContainer = document.getElementById('optionsContainer');
+                    optionsContainer.innerHTML = '';
+                    
+                    this.shuffleArray([...question.o]).forEach((option, index) => {
+                        const button = document.createElement('button');
+                        button.className = 'option-hover w-full p-4 text-left bg-white/10 hover:bg-white/20 rounded-xl transition-all duration-300 border border-white/20';
+                        button.innerHTML = `<span class="font-medium">${String.fromCharCode(65 + index)}.</span> ${option}`;
+                        button.addEventListener('click', () => this.selectAnswer(option));
+                        optionsContainer.appendChild(button);
+                    });
+                    
+                    this.updateProgress();
+                    this.startTimer();
+                    document.getElementById('feedback').classList.add('hidden');
+                }, 100);
+            }
+
+            selectAnswer(selectedAnswer) {
+                clearInterval(this.timerInterval);
+                const question = this.questions[this.currentQuestion];
+                const isCorrect = selectedAnswer === question.a;
+                const timeTaken = this.getTimerValue();
+                
+                this.answers.push({
+                    question: question.q,
+                    selected: selectedAnswer,
+                    correct: question.a,
+                    isCorrect,
+                    timeTaken,
+                    category: this.selectedCategory
+                });
+
+                // Update score and streak
+                if (isCorrect) {
+                    const timeBonus = Math.max(0, Math.floor(timeTaken / 5));
+                    this.score += 10 + timeBonus;
+                    this.streak++;
+                    this.maxStreak = Math.max(this.maxStreak, this.streak);
+                    this.playSound('correct');
+                } else {
+                    this.streak = 0;
+                    this.playSound('wrong');
+                }
+
+                this.showFeedback(isCorrect, question);
+                this.updateLiveScore();
+                this.updateStreak();
+
+                // Disable all options
+                document.querySelectorAll('#optionsContainer button').forEach(btn => {
+                    btn.disabled = true;
+                    const text = btn.textContent.substring(3);
+                    if (text === question.a) {
+                        btn.classList.add('bg-green-500', 'text-white');
+                    } else if (text === selectedAnswer && !isCorrect) {
+                        btn.classList.add('bg-red-500', 'text-white');
+                    } else {
+                        btn.classList.add('opacity-50');
+                    }
+                });
+
+                setTimeout(() => {
+                    this.currentQuestion++;
+                    this.displayQuestion();
+                }, 3000);
+            }
+
+            showFeedback(isCorrect, question) {
+                const feedback = document.getElementById('feedback');
+                const feedbackText = document.getElementById('feedbackText');
+                const explanation = document.getElementById('explanation');
+                
+                feedback.classList.remove('hidden', 'bg-green-500/20', 'bg-red-500/20');
+                feedback.classList.add(isCorrect ? 'bg-green-500/20' : 'bg-red-500/20');
+                
+                feedbackText.textContent = isCorrect ? '✅ Correct!' : '❌ Incorrect';
+                explanation.textContent = question.e;
+            }
+
+            startTimer() {
+                this.timer = this.difficulty === 'easy' ? 30 : this.difficulty === 'medium' ? 20 : 15;
+                const timerElement = document.getElementById('timer');
+                
+                this.timerInterval = setInterval(() => {
+                    this.timer--;
+                    timerElement.textContent = this.timer;
+                    
+                    if (this.timer <= 5) {
+                        timerElement.classList.add('animate-pulse', 'bg-red-600');
+                    }
+                    
+                    if (this.timer <= 0) {
+                        this.selectAnswer(null);
+                    }
+                }, 1000);
+            }
+
+            getTimerValue() {
+                const maxTime = this.difficulty === 'easy' ? 30 : this.difficulty === 'medium' ? 20 : 15;
+                return maxTime - this.timer;
+            }
+
+            updateProgress() {
+                const progress = ((this.currentQuestion) / this.questions.length) * 100;
+                document.getElementById('progressBar').style.width = `${progress}%`;
+            }
+
+            updateLiveScore() {
+                document.getElementById('liveScore').textContent = this.score;
+            }
+
+            updateStreak() {
+                const streakDisplay = document.getElementById('streakDisplay');
+                const currentStreakSpan = document.getElementById('currentStreak');
+                
+                if (this.streak > 0) {
+                    streakDisplay.classList.remove('hidden');
+                    currentStreakSpan.textContent = this.streak;
+                    if (this.streak >= 3) {
+                        streakDisplay.classList.add('streak-glow');
+                    }
+                } else {
+                    streakDisplay.classList.add('hidden');
+                    streakDisplay.classList.remove('streak-glow');
+                }
+            }
+
+            // Power-ups
+            useFiftyFifty() {
+                if (this.powerUps.fiftyFifty <= 0) return;
+                
+                this.powerUps.fiftyFifty--;
+                this.updatePowerUps();
+                
+                const question = this.questions[this.currentQuestion];
+                const options = document.querySelectorAll('#optionsContainer button');
+                const wrongOptions = Array.from(options).filter(btn => 
+                    btn.textContent.substring(3) !== question.a
+                );
+                
+                // Remove 2 wrong options
+                for (let i = 0; i < 2 && i < wrongOptions.length; i++) {
+                    wrongOptions[i].style.display = 'none';
+                }
+            }
+
+            skipQuestion() {
+                if (this.powerUps.skip <= 0) return;
+                
+                this.powerUps.skip--;
+                this.updatePowerUps();
+                
+                clearInterval(this.timerInterval);
+                this.currentQuestion++;
+                this.displayQuestion();
+            }
+
+            addExtraTime() {
+                if (this.powerUps.extraTime <= 0) return;
+                
+                this.powerUps.extraTime--;
+                this.updatePowerUps();
+                this.timer += 10;
+            }
+
+            updatePowerUps() {
+                document.getElementById('fiftyCount').textContent = this.powerUps.fiftyFifty;
+                document.getElementById('skipCount').textContent = this.powerUps.skip;
+                document.getElementById('timeCount').textContent = this.powerUps.extraTime;
+                
+                document.getElementById('fiftyFifty').disabled = this.powerUps.fiftyFifty <= 0;
+                document.getElementById('skipQuestion').disabled = this.powerUps.skip <= 0;
+                document.getElementById('extraTime').disabled = this.powerUps.extraTime <= 0;
+            }
+
+            endQuiz() {
+                clearInterval(this.timerInterval);
+                
+                // Update stats
+                this.stats.totalScore += this.score;
+                this.stats.gamesPlayed++;
+                this.stats.correctAnswers += this.answers.filter(a => a.isCorrect).length;
+                this.stats.totalQuestions += this.answers.length;
+                localStorage.setItem('quizStats', JSON.stringify(this.stats));
+                
+                document.getElementById('quizInterface').classList.add('hidden');
+                document.getElementById('results').classList.remove('hidden');
+                
+                this.showResults();
+            }
+
+            showResults() {
+                const correctAnswers = this.answers.filter(a => a.isCorrect).length;
+                const accuracy = Math.round((correctAnswers / this.answers.length) * 100);
+                
+                document.getElementById('finalScore').textContent = `${correctAnswers}/${this.answers.length}`;
+                document.getElementById('resultMessage').textContent = this.getResultMessage(accuracy);
+                
+                // Set result icon based on performance
+                const resultIcon = document.getElementById('resultIcon');
+                if (accuracy >= 90) resultIcon.textContent = '🏆';
+                else if (accuracy >= 70) resultIcon.textContent = '🎉';
+                else if (accuracy >= 50) resultIcon.textContent = '👍';
+                else resultIcon.textContent = '📚';
+                
+                this.createPerformanceChart();
+                this.showCategoryBreakdown();
+                this.showAchievements();
+            }
+
+            createPerformanceChart() {
+                const ctx = document.getElementById('performanceChart').getContext('2d');
+                const correctAnswers = this.answers.filter(a => a.isCorrect).length;
+                const wrongAnswers = this.answers.length - correctAnswers;
+                
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Correct', 'Incorrect'],
+                        datasets: [{
+                            data: [correctAnswers, wrongAnswers],
+                            backgroundColor: ['#10b981', '#ef4444'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                labels: { color: 'white' }
+                            }
+                        }
+                    }
+                });
+            }
+
+            showCategoryBreakdown() {
+                const breakdown = document.getElementById('categoryBreakdown');
+                const categoryStats = {};
+                
+                this.answers.forEach(answer => {
+                    if (!categoryStats[answer.category]) {
+                        categoryStats[answer.category] = { correct: 0, total: 0 };
+                    }
+                    categoryStats[answer.category].total++;
+                    if (answer.isCorrect) categoryStats[answer.category].correct++;
+                });
+                
+                breakdown.innerHTML = '';
+                Object.entries(categoryStats).forEach(([category, stats]) => {
+                    const accuracy = Math.round((stats.correct / stats.total) * 100);
+                    const div = document.createElement('div');
+                    div.className = 'flex justify-between items-center';
+                    div.innerHTML = `
+                        <span class="capitalize">${category}</span>
+                        <span class="font-bold">${accuracy}%</span>
+                    `;
+                    breakdown.appendChild(div);
+                });
+            }
+
+            showAchievements() {
+                const achievements = document.getElementById('achievements');
+                const earned = [];
+                
+                const correctAnswers = this.answers.filter(a => a.isCorrect).length;
+                const accuracy = (correctAnswers / this.answers.length) * 100;
+                
+                if (accuracy === 100) earned.push({ icon: '🏆', title: 'Perfect Score!', desc: 'Got every question right' });
+                if (this.maxStreak >= 5) earned.push({ icon: '🔥', title: 'Hot Streak!', desc: '5+ questions in a row' });
+                if (this.score >= 100) earned.push({ icon: '💯', title: 'Century!', desc: 'Scored 100+ points' });
+                if (this.answers.some(a => a.timeTaken <= 3)) earned.push({ icon: '⚡', title: 'Lightning Fast!', desc: 'Answered in under 3 seconds' });
+                
+                if (earned.length > 0) {
+                    achievements.innerHTML = `
+                        <h3 class="font-semibold mb-4">🏅 Achievements Unlocked</h3>
+                        <div class="grid grid-cols-2 gap-3">
+                            ${earned.map(achievement => `
+                                <div class="bg-yellow-500/20 border border-yellow-500/50 rounded-lg p-3 text-center">
+                                    <div class="text-2xl mb-1">${achievement.icon}</div>
+                                    <div class="font-semibold text-sm">${achievement.title}</div>
+                                    <div class="text-xs opacity-75">${achievement.desc}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                }
+            }
+
+            getResultMessage(accuracy) {
+                if (accuracy >= 90) return "Outstanding! You're a quiz master! 🌟";
+                if (accuracy >= 70) return "Great job! You really know your stuff! 👏";
+                if (accuracy >= 50) return "Good effort! Keep learning and improving! 📚";
+                return "Don't give up! Practice makes perfect! 💪";
+            }
+
+            shareResults() {
+                const correctAnswers = this.answers.filter(a => a.isCorrect).length;
+                const text = `I just scored ${correctAnswers}/${this.answers.length} on QuizMaster Pro! 🧠✨ Can you beat my score?`;
+                
+                if (navigator.share) {
+                    navigator.share({ title: 'QuizMaster Pro Results', text });
+                } else {
+                    navigator.clipboard.writeText(text);
+                    alert('Results copied to clipboard!');
+                }
+            }
+
+            updateDashboard() {
+                document.getElementById('totalScore').textContent = this.stats.totalScore;
+                document.getElementById('streak').textContent = this.maxStreak;
+                const accuracy = this.stats.totalQuestions > 0 ? 
+                    Math.round((this.stats.correctAnswers / this.stats.totalQuestions) * 100) : 0;
+                document.getElementById('accuracy').textContent = `${accuracy}%`;
+            }
+
+            resetQuiz() {
+                document.getElementById('results').classList.add('hidden');
+                document.getElementById('dashboard').classList.remove('hidden');
+                this.updateDashboard();
+            }
+
+            playSound(type) {
+                if (!this.soundEnabled) return;
+                const audio = document.getElementById(type === 'correct' ? 'correctSound' : 'wrongSound');
+                audio.currentTime = 0;
+                audio.play().catch(() => {}); // Ignore autoplay restrictions
+            }
+
+            toggleSound() {
+                this.soundEnabled = !this.soundEnabled;
+                document.getElementById('soundToggle').textContent = this.soundEnabled ? '🔊' : '🔇';
+            }
+
+            toggleDarkMode() {
+                this.darkMode = !this.darkMode;
+                document.body.classList.toggle('light-mode', this.darkMode);
+                document.getElementById('darkMode').textContent = this.darkMode ? '🌙' : '☀️';
+            }
+
+            shuffleArray(array) {
+                const shuffled = [...array];
+                for (let i = shuffled.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+                }
+                return shuffled;
+            }
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            new QuizMasterPro();
+        });
+    </script>
+</body>
+</html>
