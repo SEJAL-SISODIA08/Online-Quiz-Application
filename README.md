@@ -83,5 +83,11 @@
 - Export/import functionality
 - Advanced reporting dashboard
 
+## 🛠️ Tech Stack
+- HTML5
+- CSS3
+- Vanilla JavaScript
+- Local Storage API
+
   ## Live Demo
 https://sejal-sisodia08.github.io/Online-Quiz-Application
