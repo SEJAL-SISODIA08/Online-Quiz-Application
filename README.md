@@ -37,7 +37,6 @@
 - **Modern ES6+**: Clean, maintainable code structure
 - **Responsive CSS**: Tailwind CSS for consistent styling
 - **Local Storage**: Persistent data without backend requirements
-- **PWA Ready**: Can be installed as a mobile app
 - **Accessibility**: Keyboard navigation and screen reader support
 
 ### 🌟 Unique Selling Points
