@@ -69,12 +69,11 @@
 - **User Experience**: Intuitive, engaging interface
 - **Technical Merit**: Clean architecture and best practices
 
-## 🚀 Quick Start
-```bash
-# Clone or download the project
-# Open index.html in your browser
-# Start quizzing immediately!
-```
+## ⚙️ How to Run Locally
+1. Clone this repository
+2. Open `index.html` in any modern browser
+3. No installations or dependencies needed
+
 
 ## 📈 Future Enhancements
 - Integration with Open Trivia Database API
