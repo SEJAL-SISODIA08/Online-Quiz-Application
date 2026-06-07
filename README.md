@@ -1,6 +1,6 @@
 # 🧠 QuizMaster Pro - Advanced Learning Platform
 
-## 🏆 Competition-Winning Features
+## 🏆  Features
 
 ### 🚀 Core Features
 - **Multi-Category Quizzes**: General Knowledge, Science & Tech, Programming
